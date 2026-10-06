@@ -1,0 +1,12 @@
+event-qr-system/
+├── config/
+│   └── db.js
+├── public/
+├── services/
+│   └── mailer.js
+├── .env
+├── .dockerignore
+├── Dockerfile
+├── docker-compose.yml
+├── init.sql          <-- ไฟล์สร้างตาราง MySQL เริ่มต้น
+└── server.js
