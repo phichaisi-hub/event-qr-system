@@ -3,7 +3,10 @@ version: '3.8'
 services:
   # 🟢 Node.js Web Application
   app:
-    build: .
+    build: 
+    # รูปแบบ: https://<TOKEN>@github.com/<USERNAME>/<REPO_NAME>.git#main
+      context: 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@github.com/phichaisi-hub/event-qr-system.git#main
+      dockerfile: Dockerfile
     container_name: event_qr_app
     restart: always
     ports:
