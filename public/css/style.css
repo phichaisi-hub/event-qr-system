@@ -1,0 +1,39 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.card {
+    border-radius: 10px;
+    border: none;
+}
+
+.card-header {
+    border-top-left-radius: 10px !important;
+    border-top-right-radius: 10px !important;
+}
+
+.result-box {
+    display: none;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 15px;
+}
+
+.status-SUCCESS {
+    background-color: #d1e7dd;
+    border: 2px solid #0f5132;
+    color: #0f5132;
+}
+
+.status-DUPLICATE {
+    background-color: #fff3cd;
+    border: 2px solid #664d03;
+    color: #664d03;
+}
+
+.status-INVALID {
+    background-color: #f8d7da;
+    border: 2px solid #842029;
+    color: #842029;
+}
