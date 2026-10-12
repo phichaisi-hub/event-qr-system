@@ -3,192 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ลงทะเบียนเข้าปฏิบัติงาน</title>
+    <title>ลงทะเบียนเข้าปฏิบัติงาน - Event QR System</title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             background-color: #f4f6f9;
-            font-family: 'Sukhumvit Set', 'Segoe UI', Tahoma, sans-serif;
+            font-family: 'Sarabun', 'Sukhumvit Set', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 30px 0;
         }
-        .register-card {
-            max-width: 650px;
-            margin: 40px auto;
+        .register-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .card-custom {
             border: none;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            background: #ffffff;
             overflow: hidden;
         }
         .card-header-custom {
             background-color: #0d6efd;
-            color: white;
-            padding: 20px;
+            color: #ffffff;
+            padding: 25px;
             text-align: center;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="card register-card">
-        <div class="card-header-custom">
-            <h3 class="mb-0 fw-bold">ลงทะเบียนเข้าปฏิบัติงาน</h3>
-        </div>
-        <div class="card-body p-4">
-            <form id="registerForm" class="row g-3">
-                
-                <!-- ชื่องาน -->
-                <div class="col-12">
-                    <label class="form-label fw-bold">ชื่องานที่เข้าปฏิบัติงาน <span class="text-danger">*</span></label>
-                    <select id="event_id" name="event_id" class="form-select" required>
-                        <option value="">-- กำลังโหลดรายการ Event... --</option>
-                    </select>
-                </div>
+    <div class="container register-container">
+        <div class="card card-custom">
+            <div class="card-header-custom">
+                <h3 class="fw-bold mb-1">📋 ลงทะเบียนเข้าปฏิบัติงาน</h3>
+                <p class="mb-0 text-white-50">กรอกข้อมูลเพื่อรับ Ticket QR Code ผ่านทางอีเมล</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
 
-                <!-- ชื่อ-นามสกุล & ชื่อบริษัท -->
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">ชื่อ-นามสกุล <span class="text-danger">*</span></label>
-                    <input type="text" id="fullname" name="fullname" class="form-control" placeholder="เช่น พิชัย สิงหนนท์" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">ชื่อบริษัท <span class="text-danger">*</span></label>
-                    <input type="text" id="company" name="company" class="form-control" placeholder="เช่น IMPACT" required>
-                </div>
+                <div id="alertBox" class="alert alert-danger d-none mb-4" role="alert"></div>
 
-                <!-- ตำแหน่ง & เบอร์โทรศัพท์ -->
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">ตำแหน่ง</label>
-                    <input type="text" id="position" name="position" class="form-control" placeholder="เช่น ASST Mng">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">เบอร์โทรศัพท์ <span class="text-danger">*</span></label>
-                    <input type="tel" id="phone" name="phone" class="form-control" placeholder="เช่น 0892014217" required>
-                </div>
+                <form id="registerForm" class="row g-3">
+                    
+                    <div class="col-12">
+                        <label for="event_id" class="form-label fw-semibold">ชื่องานที่เข้าปฏิบัติงาน <span class="text-danger">*</span></label>
+                        <select class="form-select" id="event_id" required>
+                            <option value="">-- กำลังโหลดชื่องาน Event --</option>
+                        </select>
+                    </div>
 
-                <!-- อีเมล -->
-                <div class="col-12">
-                    <label class="form-label fw-bold">อีเมลรับ QR Code <span class="text-danger">*</span></label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="เช่น phichais@impact.co.th" required>
-                </div>
+                    <div class="col-md-6">
+                        <label for="fullname" class="form-label fw-semibold">ชื่อ-นามสกุล <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="fullname" required placeholder="เช่น นายพิชัย สิงหนนท์">
+                    </div>
 
-                <!-- สถานที่จัดงาน & เลขที่บูธ -->
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">สถานที่จัดงาน</label>
-                    <input type="text" id="location" class="form-control bg-light" placeholder="สถานที่จัดงานจะแสดงอัตโนมัติ" readonly>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">เลขที่บูธ <span class="text-danger">*</span></label>
-                    <input type="text" id="booth_number" name="booth_number" class="form-control" placeholder="เช่น Hall 1 - A12" required>
-                </div>
+                    <div class="col-md-6">
+                        <label for="company" class="form-label fw-semibold">ชื่อบริษัท <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="company" required placeholder="เช่น IMPACT Exhibition">
+                    </div>
 
-                <!-- ประเภทงาน & จำนวนผู้ใช้งาน -->
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">ประเภทงาน <span class="text-danger">*</span></label>
-                    <select id="job_type" name="job_type" class="form-select" required>
-                        <option value="ติดตั้ง">ติดตั้ง</option>
-                        <option value="รื้อถอน">รื้อถอน</option>
-                        <option value="ดูแลระบบ">ดูแลระบบ</option>
-                        <option value="อื่นๆ">อื่นๆ</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">จำนวนผู้เข้างาน (คน) <span class="text-danger">*</span></label>
-                    <input type="number" id="num_workers" name="num_workers" class="form-control" value="1" min="1" required>
-                </div>
+                    <div class="col-md-6">
+                        <label for="position" class="form-label fw-semibold">ตำแหน่ง</label>
+                        <input type="text" class="form-control" id="position" placeholder="เช่น Asst. IT Manager">
+                    </div>
 
-                <!-- วันเวลาที่เข้าดำเนินการ -->
-                <div class="col-12">
-                    <label class="form-label fw-bold">วันเวลาที่เข้าดำเนินการ <span class="text-danger">*</span></label>
-                    <input type="datetime-local" id="work_date" name="work_date" class="form-control" required>
-                </div>
+                    <div class="col-md-6">
+                        <label for="phone" class="form-label fw-semibold">เบอร์โทรศัพท์ <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="phone" required placeholder="เช่น 0892014217">
+                    </div>
 
-                <!-- ปุ่มส่งข้อมูล -->
-                <div class="col-12 mt-4">
-                    <button type="submit" class="btn btn-primary w-100 py-2 fs-5 fw-bold">ลงทะเบียน</button>
-                </div>
-            </form>
+                    <div class="col-12">
+                        <label for="email" class="form-label fw-semibold">อีเมลรับ QR Code <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" required placeholder="เช่น example@email.com">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="locationDisplay" class="form-label fw-semibold">สถานที่จัดงาน</label>
+                        <input type="text" class="form-control bg-light" id="locationDisplay" readonly placeholder="สถานที่จัดงานจะแสดงอัตโนมัติ">
+                        <input type="hidden" id="location" value="">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="booth_number" class="form-label fw-semibold">เลขที่บูธ <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="booth_number" required placeholder="เช่น Hall 1 - A12">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="job_type" class="form-label fw-semibold">ประเภทงาน <span class="text-danger">*</span></label>
+                        <select class="form-select" id="job_type" required>
+                            <option value="ติดตั้ง">ติดตั้ง</option>
+                            <option value="รื้อถอน">รื้อถอน</option>
+                            <option value="ปฏิบัติงานจริง">ปฏิบัติงานจริง</option>
+                            <option value="อื่นๆ">อื่นๆ</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="num_workers" class="form-label fw-semibold">จำนวนผู้เข้างาน (คน) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="num_workers" value="1" min="1" required>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="work_date" class="form-label fw-semibold">วันเวลาที่เข้าดำเนินการ <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="work_date" required>
+                    </div>
+
+                    <div class="col-12 text-end mt-4">
+                        <button type="submit" id="btnSubmit" class="btn btn-primary px-5 py-2 fw-bold w-100">ยืนยันการลงทะเบียน</button>
+                    </div>
+
+                </form>
+
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const eventSelect = document.getElementById("event_id");
-    const locationInput = document.getElementById("location");
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    // 1. ดึงรายการ Event ทั้งหมดมาจาก API
-    fetch('/api/events')
-        .then(response => {
-            if (!response.ok) throw new Error(" Network Error");
-            return response.json();
-        })
-        .then(events => {
-            eventSelect.innerHTML = '<option value="">-- เลือกชื่องาน --</option>';
+    <script>
+        let eventsList = [];
 
-            if (events.length === 0) {
-                eventSelect.innerHTML = '<option value="">-- ไม่พบบันทึก Event ในระบบ --</option>';
-                return;
-            }
+        document.addEventListener("DOMContentLoaded", function () {
+            // โหลดรายการ Event จาก Backend มาใส่ใน Dropdown
+            fetch('/api/events')
+                .then(res => res.json())
+                .then(events => {
+                    eventsList = events;
+                    const select = document.getElementById("event_id");
+                    select.innerHTML = '<option value="">-- เลือกชื่องาน Event --</option>';
 
-            events.forEach(event => {
-                const option = document.createElement('option');
-                option.value = event.id;
-                option.textContent = event.event_name;
-                // แนบข้อมูล location ไว้ใน dataset ของ option
-                option.dataset.location = event.location || 'ไม่ได้ระบุสถานที่';
-                eventSelect.appendChild(option);
+                    if (events.length === 0) {
+                        select.innerHTML = '<option value="">-- ยังไม่มีชื่องาน Event ในระบบ --</option>';
+                        return;
+                    }
+
+                    events.forEach(event => {
+                        const option = document.createElement("option");
+                        option.value = event.id;
+                        option.textContent = event.event_name;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(err => {
+                    console.error("Error loading events:", err);
+                    document.getElementById("event_id").innerHTML = '<option value="">-- ไม่สามารถโหลดข้อมูล Event ได้ --</option>';
+                });
+
+            // เมื่อเลือกชื่องาน Event ให้แสดงสถานที่จัดงานอัตโนมัติ
+            document.getElementById("event_id").addEventListener("change", function () {
+                const selectedId = this.value;
+                const event = eventsList.find(e => e.id == selectedId);
+                const locationInput = document.getElementById("locationDisplay");
+                const hiddenLocation = document.getElementById("location");
+
+                if (event && event.location) {
+                    locationInput.value = event.location;
+                    hiddenLocation.value = event.location;
+                } else {
+                    locationInput.value = '-';
+                    hiddenLocation.value = '';
+                }
             });
-        })
-        .catch(error => {
-            console.error("Error loading events:", error);
-            eventSelect.innerHTML = '<option value="">-- ไม่สามารถโหลดรายชื่อ Event ได้ --</option>';
+
+            // จัดการเมื่อส่งฟอร์มลงทะเบียน
+            document.getElementById("registerForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const alertBox = document.getElementById("alertBox");
+                alertBox.classList.add("d-none");
+
+                const btnSubmit = document.getElementById("btnSubmit");
+                btnSubmit.disabled = true;
+                btnSubmit.textContent = "กำลังบันทึกข้อมูลและส่งอีเมล...";
+
+                const eventSelect = document.getElementById("event_id");
+                const eventName = eventSelect.options[eventSelect.selectedIndex].text;
+                const locationVal = document.getElementById("locationDisplay").value || '-';
+
+                const formData = {
+                    event_id: eventSelect.value,
+                    fullname: document.getElementById("fullname").value.trim(),
+                    company: document.getElementById("company").value.trim(),
+                    position: document.getElementById("position").value.trim(),
+                    phone: document.getElementById("phone").value.trim(),
+                    email: document.getElementById("email").value.trim(),
+                    booth_number: document.getElementById("booth_number").value.trim(),
+                    job_type: document.getElementById("job_type").value.trim(),
+                    num_workers: document.getElementById("num_workers").value,
+                    work_date: document.getElementById("work_date").value
+                };
+
+                fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                })
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || "เกิดข้อผิดพลาดในการลงทะเบียน");
+                    return data;
+                })
+                .then(data => {
+                    if (data.success && data.attendee_id) {
+                        window.location.href = `success.html?event=${encodeURIComponent(eventName)}&location=${encodeURIComponent(locationVal)}&fullname=${encodeURIComponent(formData.fullname)}&company=${encodeURIComponent(formData.company)}&booth=${encodeURIComponent(formData.booth_number)}&job_type=${encodeURIComponent(formData.job_type)}&workers=${formData.num_workers}&id=${data.attendee_id}`;
+                    } else {
+                        throw new Error("ไม่พบรหัสผู้ลงทะเบียนในระบบ");
+                    }
+                })
+                .catch(err => {
+                    alertBox.textContent = err.message;
+                    alertBox.classList.remove("d-none");
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = "ยืนยันการลงทะเบียน";
+                });
+            });
         });
-
-    // 2. เมื่อผู้ใช้เลือกชื่องาน ให้ดึงสถานที่มาแสดงในช่องอัตโนมัติ
-    eventSelect.addEventListener("change", function () {
-        const selectedOption = eventSelect.options[eventSelect.selectedIndex];
-        
-        if (selectedOption && selectedOption.dataset.location) {
-            locationInput.value = selectedOption.dataset.location;
-        } else {
-            locationInput.value = '';
-        }
-    });
-
-    // 3. ฟังก์ชันบันทึกข้อมูลการลงทะเบียน
-    document.getElementById("registerForm").addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        const formData = {
-            event_id: document.getElementById("event_id").value,
-            fullname: document.getElementById("fullname").value,
-            company: document.getElementById("company").value,
-            position: document.getElementById("position").value,
-            phone: document.getElementById("phone").value,
-            email: document.getElementById("email").value,
-            booth_number: document.getElementById("booth_number").value,
-            job_type: document.getElementById("job_type").value,
-            num_workers: document.getElementById("num_workers").value,
-            work_date: document.getElementById("work_date").value
-        };
-
-        fetch('/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        })
-        .then(res => res.json())
-        .then(data => {
-            alert("ลงทะเบียนสำเร็จเรียบร้อยแล้ว!");
-            document.getElementById("registerForm").reset();
-            locationInput.value = '';
-        })
-        .catch(err => {
-            console.error(err);
-            alert("เกิดข้อผิดพลาดในการลงทะเบียน");
-        });
-    });
-});
-</script>
-
+    </script>
 </body>
 </html>
