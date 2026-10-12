@@ -64,6 +64,7 @@
             <h3 class="fw-bold text-dark mb-0">⚙️ ระบบจัดการ Event และรายงานการเข้างาน</h3>
             <div class="d-flex align-items-center">
                 <span class="me-3 fs-6">👤 <b id="userDisplayFullName">-</b> (<span id="userDisplayRole" class="badge bg-primary">ROLE</span>)</span>
+                <button id="btnOpenPasswordModal" class="btn btn-outline-secondary btn-sm me-2 fw-bold">เปลี่ยนรหัสผ่าน</button>
                 <button id="btnLogout" class="btn btn-outline-danger btn-sm fw-bold">ออกจากระบบ</button>
             </div>
         </div>
@@ -75,12 +76,13 @@
             </div>
             <div class="card-body p-4">
                 <form id="userForm" class="row g-3 mb-4">
+                    <input type="hidden" id="edit_user_id" value="">
                     <div class="col-md-3">
                         <label for="u_username" class="form-label fw-semibold">Username <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="u_username" required placeholder="ชื่อผู้ใช้">
                     </div>
                     <div class="col-md-3">
-                        <label for="u_password" class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+                        <label for="u_password" class="form-label fw-semibold">Password <span id="pwdHint" class="text-danger">*</span></label>
                         <input type="password" class="form-control" id="u_password" required placeholder="รหัสผ่าน">
                     </div>
                     <div class="col-md-3">
@@ -96,7 +98,8 @@
                         </select>
                     </div>
                     <div class="col-12 text-end">
-                        <button type="submit" class="btn btn-dark px-4 fw-bold">+ เพิ่มผู้ใช้งาน</button>
+                        <button type="button" id="btnCancelUserEdit" class="btn btn-secondary me-2 d-none">ยกเลิก</button>
+                        <button type="submit" id="btnSaveUser" class="btn btn-dark px-4 fw-bold">+ เพิ่มผู้ใช้งาน</button>
                     </div>
                 </form>
 
@@ -108,7 +111,7 @@
                                 <th>Username</th>
                                 <th>ชื่อ-นามสกุล</th>
                                 <th style="width: 140px;" class="text-center">สิทธิ์</th>
-                                <th style="width: 100px;" class="text-center">จัดการ</th>
+                                <th style="width: 140px;" class="text-center">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="userTableBody"></tbody>
@@ -117,10 +120,10 @@
             </div>
         </div>
 
-        <!-- [ส่วนที่ 1] จัดการ Event (เพิ่ม/แก้ไข/Import) -->
+        <!-- [ส่วนที่ 1] จัดการ Event (เพิ่ม/แก้ไข/Import/Export) -->
         <div class="card card-custom">
             <div class="card-header card-header-primary">
-                1. จัดการรายชื่อ Event (เพิ่ม/แก้ไข/Import Excel)
+                1. จัดการรายชื่อ Event (เพิ่ม/แก้ไข/Import & Export Excel)
             </div>
             <div class="card-body p-4">
                 
@@ -150,12 +153,14 @@
 
                 <hr class="my-4">
 
+                <!-- ช่อง Import และ Export รายชื่อ Event -->
                 <div class="row align-items-center mb-3">
-                    <div class="col-md-9">
-                        <form id="importForm" class="d-flex align-items-center">
-                            <label class="form-label me-2 mb-0 text-nowrap">Import รายชื่อ Event จาก Excel (คอลัมน์: event_name, location, event_date):</label>
-                            <input type="file" class="form-control me-2" id="excel_file" accept=".xlsx, .xls" required>
+                    <div class="col-md-12">
+                        <form id="importForm" class="d-flex align-items-center gap-2">
+                            <label class="form-label mb-0 text-nowrap fw-semibold">จัดการ Excel Event:</label>
+                            <input type="file" class="form-control" id="excel_file" accept=".xlsx, .xls" required>
                             <button type="submit" class="btn btn-outline-primary text-nowrap">นำเข้า Excel</button>
+                            <button type="button" id="btnExportEvents" class="btn btn-outline-success text-nowrap">📥 Export รายชื่อ Event</button>
                         </form>
                     </div>
                 </div>
@@ -211,9 +216,326 @@
 
     </div>
 
+    <!-- Modal เปลี่ยนรหัสผ่านตนเอง -->
+    <div class="modal fade" id="passwordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">เปลี่ยนรหัสผ่าน</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label">รหัสผ่านเดิม</label>
+                            <input type="password" id="old_password" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">รหัสผ่านใหม่</label>
+                            <input type="password" id="new_password" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">ยืนยันการเปลี่ยนรหัสผ่าน</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Admin Custom JS -->
-    <script src="js/admin.js?v=2.0"></script>
+    <script>
+        let currentUser = null;
+        let allUsers = [];
+        let allEvents = [];
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const userData = localStorage.getItem("currentUser");
+            if (!userData) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            currentUser = JSON.parse(userData);
+            document.getElementById("userDisplayFullName").textContent = currentUser.fullname;
+            document.getElementById("userDisplayRole").textContent = currentUser.role;
+
+            if (currentUser.role === 'ADMIN') {
+                document.getElementById("userManagementSection").classList.remove("d-none");
+                loadUsers();
+            }
+
+            loadEvents();
+
+            document.getElementById("btnLogout").addEventListener("click", function () {
+                localStorage.removeItem("currentUser");
+                window.location.href = "login.html";
+            });
+
+            document.getElementById("btnOpenPasswordModal").addEventListener("click", function () {
+                const myModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+                myModal.show();
+            });
+
+            document.getElementById("changePasswordForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                const old_password = document.getElementById("old_password").value;
+                const new_password = document.getElementById("new_password").value;
+
+                fetch(`/api/users/${currentUser.id}/password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ old_password, new_password })
+                })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok) throw new Error(data.error);
+                    alert("เปลี่ยนรหัสผ่านสำเร็จ!");
+                    location.reload();
+                })
+                .catch(err => alert(err.message));
+            });
+
+            // จัดการฟอร์มผู้ใช้งาน (Admin)
+            document.getElementById("userForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                const editId = document.getElementById("edit_user_id").value;
+                const username = document.getElementById("u_username").value.trim();
+                const password = document.getElementById("u_password").value;
+                const fullname = document.getElementById("u_fullname").value.trim();
+                const role = document.getElementById("u_role").value;
+
+                const url = editId ? `/api/users/${editId}` : '/api/users';
+                const method = editId ? 'PUT' : 'POST';
+
+                fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, fullname, role })
+                })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok) throw new Error(data.error);
+                    alert(data.message);
+                    resetUserForm();
+                    loadUsers();
+                })
+                .catch(err => alert(err.message));
+            });
+
+            document.getElementById("btnCancelUserEdit").addEventListener("click", resetUserForm);
+
+            // จัดการฟอร์ม Event
+            document.getElementById("eventForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                const editId = document.getElementById("event_id").value;
+                const event_name = document.getElementById("event_name").value.trim();
+                const location = document.getElementById("location").value.trim();
+                const event_date = document.getElementById("event_date").value;
+
+                const url = editId ? `/api/events/${editId}` : '/api/events';
+                const method = editId ? 'PUT' : 'POST';
+
+                fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ event_name, location, event_date })
+                })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok) throw new Error(data.error);
+                    alert(editId ? "อัปเดต Event สำเร็จ" : "เพิ่ม Event สำเร็จ");
+                    resetEventForm();
+                    loadEvents();
+                })
+                .catch(err => alert(err.message));
+            });
+
+            document.getElementById("btnResetEvent").addEventListener("click", resetEventForm);
+
+            // นำเข้า Event Excel
+            document.getElementById("importForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                const fileInput = document.getElementById("excel_file");
+                if (fileInput.files.length === 0) return alert("กรุณาเลือกไฟล์ Excel");
+
+                const formData = new FormData();
+                formData.append("excel_file", fileInput.files[0]);
+
+                fetch('/api/events/import', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok) throw new Error(data.error);
+                    alert(data.message);
+                    fileInput.value = '';
+                    loadEvents();
+                })
+                .catch(err => alert(err.message));
+            });
+
+            // ปุ่ม Export รายชื่อ Event ออกมาเป็น Excel (Template เดียวกัน)
+            document.getElementById("btnExportEvents").addEventListener("click", function () {
+                window.location.href = '/api/events/export-excel';
+            });
+
+            // ออกรายงาน Excel
+            document.getElementById("reportForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                const event_id = document.getElementById("report_event_id").value;
+                const start_date = document.getElementById("start_date").value;
+                const end_date = document.getElementById("end_date").value;
+
+                let url = `/api/export-excel?`;
+                const params = [];
+                if (event_id) params.push(`event_id=${event_id}`);
+                if (start_date) params.push(`start_date=${start_date}`);
+                if (end_date) params.push(`end_date=${end_date}`);
+                url += params.join('&');
+
+                window.location.href = url;
+            });
+        });
+
+        function loadUsers() {
+            fetch('/api/users')
+                .then(res => res.json())
+                .then(users => {
+                    allUsers = users;
+                    const tbody = document.getElementById("userTableBody");
+                    tbody.innerHTML = '';
+                    users.forEach(u => {
+                        let roleBadge = 'bg-secondary';
+                        if (u.role === 'ADMIN') roleBadge = 'bg-danger';
+                        else if (u.role === 'SUPERVISOR') roleBadge = 'bg-warning text-dark';
+                        else if (u.role === 'SCANNER') roleBadge = 'bg-info text-dark';
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td class="text-center">${u.id}</td>
+                                <td><b>${u.username}</b></td>
+                                <td>${u.fullname}</td>
+                                <td class="text-center"><span class="badge ${roleBadge}">${u.role}</span></td>
+                                <td class="text-center">
+                                    <button class="btn btn-warning btn-sm fw-bold me-1" onclick="editUser(${u.id})">แก้ไข</button>
+                                    ${u.id !== currentUser.id ? `<button class="btn btn-danger btn-sm fw-bold" onclick="deleteUser(${u.id})">ลบ</button>` : '-'}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                });
+        }
+
+        function editUser(id) {
+            const user = allUsers.find(u => u.id === id);
+            if (!user) return;
+
+            document.getElementById("edit_user_id").value = user.id;
+            document.getElementById("u_username").value = user.username;
+            document.getElementById("u_username").disabled = true;
+            document.getElementById("u_password").value = '';
+            document.getElementById("u_password").required = false;
+            document.getElementById("pwdHint").textContent = "(เว้นว่างไว้ถ้าไม่ต้องการเปลี่ยน)";
+            document.getElementById("u_fullname").value = user.fullname;
+            document.getElementById("u_role").value = user.role;
+            document.getElementById("btnSaveUser").textContent = "อัปเดตผู้ใช้งาน";
+            document.getElementById("btnSaveUser").className = "btn btn-warning px-4 fw-bold";
+            document.getElementById("btnCancelUserEdit").classList.remove("d-none");
+        }
+
+        function resetUserForm() {
+            document.getElementById("edit_user_id").value = '';
+            document.getElementById("u_username").value = '';
+            document.getElementById("u_username").disabled = false;
+            document.getElementById("u_password").value = '';
+            document.getElementById("u_password").required = true;
+            document.getElementById("pwdHint").textContent = "*";
+            document.getElementById("u_fullname").value = '';
+            document.getElementById("u_role").value = 'SUPERVISOR';
+            document.getElementById("btnSaveUser").textContent = "+ เพิ่มผู้ใช้งาน";
+            document.getElementById("btnSaveUser").className = "btn btn-dark px-4 fw-bold";
+            document.getElementById("btnCancelUserEdit").classList.add("d-none");
+        }
+
+        function deleteUser(id) {
+            if (!confirm("คุณต้องการลบผู้ใช้งานนี้ใช่หรือไม่?")) return;
+            fetch(`/api/users/${id}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    loadUsers();
+                });
+        }
+
+        function loadEvents() {
+            fetch('/api/events')
+                .then(res => res.json())
+                .then(events => {
+                    allEvents = events;
+                    const tbody = document.getElementById("eventTableBody");
+                    const reportSelect = document.getElementById("report_event_id");
+
+                    tbody.innerHTML = '';
+                    reportSelect.innerHTML = '<option value="">-- ทั้งหมดทุก Event --</option>';
+
+                    if (events.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">ยังไม่มีชื่องาน Event ในระบบ</td></tr>';
+                        return;
+                    }
+
+                    events.forEach(ev => {
+                        const formattedDate = ev.event_date ? new Date(ev.event_date).toISOString().split('T')[0] : '-';
+                        tbody.innerHTML += `
+                            <tr>
+                                <td class="text-center">${ev.id}</td>
+                                <td><b>${ev.event_name}</b></td>
+                                <td>${ev.location || '-'}</td>
+                                <td class="text-center">${formattedDate}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-warning btn-sm fw-bold me-1" onclick="editEvent(${ev.id})">แก้ไข</button>
+                                    <button class="btn btn-danger btn-sm fw-bold" onclick="deleteEvent(${ev.id})">ลบ</button>
+                                </td>
+                            </tr>
+                        `;
+
+                        reportSelect.innerHTML += `<option value="${ev.id}">${ev.event_name} (${formattedDate})</option>`;
+                    });
+                });
+        }
+
+        function editEvent(id) {
+            const ev = allEvents.find(e => e.id === id);
+            if (!ev) return;
+
+            document.getElementById("event_id").value = ev.id;
+            document.getElementById("event_name").value = ev.event_name;
+            document.getElementById("location").value = ev.location || '';
+            document.getElementById("event_date").value = ev.event_date ? new Date(ev.event_date).toISOString().split('T')[0] : '';
+            document.getElementById("btnSaveEvent").textContent = "อัปเดต Event";
+            document.getElementById("btnSaveEvent").className = "btn btn-warning px-4 text-dark fw-bold";
+            document.getElementById("btnResetEvent").classList.remove("d-none");
+        }
+
+        function resetEventForm() {
+            document.getElementById("event_id").value = '';
+            document.getElementById("event_name").value = '';
+            document.getElementById("location").value = '';
+            document.getElementById("event_date").value = '';
+            document.getElementById("btnSaveEvent").textContent = "บันทึก Event";
+            document.getElementById("btnSaveEvent").className = "btn btn-success px-4";
+            document.getElementById("btnResetEvent").classList.add("d-none");
+        }
+
+        function deleteEvent(id) {
+            if (!confirm("คุณต้องการลบ Event นี้ใช่หรือไม่?")) return;
+            fetch(`/api/events/${id}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || "ลบงานสำเร็จ");
+                    loadEvents();
+                });
+        }
+    </script>
 </body>
 </html>
