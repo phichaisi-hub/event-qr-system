@@ -1,49 +1,47 @@
 version: '3.8'
 
 services:
-  # 🟢 Node.js Web Application
+  db:
+    image: mysql:8.0
+    container_name: event_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: event_qr_db
+      TZ: Asia/Bangkok                         # <-- ตั้งเวลา MySQL Container เป็นเวลาไทย
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: event_phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: rootpassword
+
   app:
-    build: 
-    # รูปแบบ: https://<TOKEN>@github.com/<USERNAME>/<REPO_NAME>.git#main
-      context: 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@github.com/phichaisi-hub/event-qr-system.git#main
-      dockerfile: Dockerfile
+    build: .
     container_name: event_qr_app
     restart: always
     ports:
       - "3000:3000"
     environment:
-      - PORT=3000
+      - TZ=Asia/Bangkok                        # <-- ตั้งเวลา Node.js Container เป็นเวลาไทย
       - DB_HOST=db
       - DB_USER=root
       - DB_PASSWORD=rootpassword
       - DB_NAME=event_qr_db
-      - DB_PORT=3306
-    env_file:
-      - .env
+      - EMAIL_USER=phichaisi@gmail.com
+      - EMAIL_PASS=nhwy ubpl nhgt ymnu
+      - SENDER_NAME=Event Security System
     depends_on:
       - db
-    networks:
-      - event_net
-
-  # 🔵 MySQL Database Container
-  db:
-    image: mysql:8.0
-    container_name: event_qr_db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: event_qr_db
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - event_net
-
-networks:
-  event_net:
-    driver: bridge
 
 volumes:
-  mysql_data:
+  db_data:
