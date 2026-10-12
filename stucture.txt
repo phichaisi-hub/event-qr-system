@@ -1,12 +1,12 @@
 event-qr-system/
-├── config/
-│   └── db.js
-├── public/
-├── services/
-│   └── mailer.js
-├── .env
-├── .dockerignore
-├── Dockerfile
-├── docker-compose.yml
-├── init.sql          <-- ไฟล์สร้างตาราง MySQL เริ่มต้น
-└── server.js
+├── docker-compose.yml       # ตั้งค่า Timezone (Asia/Bangkok) ของ Container และ Database
+├── Dockerfile               # ไฟล์สำหรับ Build Node.js Environment
+├── package.json             # รวมแพ็กเกจที่ใช้ (express, mysql2, nodemailer, qrcode, exceljs, multer)
+├── init.sql                 # โครงสร้างฐานข้อมูลเริ่มต้น (events, attendees, checkin_logs)
+├── server.js                # [UPDATE] Backendหลัก รวม API (จัดการ Event, Import Excel เช็คซ้ำ, Check-in เวลาไทย, Export Report)
+└── public/                  # โฟลเดอร์เก็บไฟล์ Frontend (Static Files)
+    ├── admin.html           # [UPDATE] หน้า UI ผู้ดูแลระบบ (จัดการ Event, นำเข้า Excel, ออกรายงาน)
+    ├── register.html        # หน้าลงทะเบียนผู้เข้าร่วมงาน / รับ QR Code
+    ├── scanner.html         # หน้าสแกน QR Code เช็คอิน
+    └── js/
+        └── admin.js         # [UPDATE] สคริปต์ Frontend ควบคุมการทำงานของหน้า admin.html
