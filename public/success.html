@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงทะเบียนสำเร็จ - Event QR System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Sarabun', 'Sukhumvit Set', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .success-card {
+            width: 100%;
+            max-width: 550px;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            background: #ffffff;
+        }
+        .success-header {
+            background-color: #198754;
+            color: #ffffff;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            padding: 25px 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card success-card">
+        <div class="success-header">
+            <h3 class="fw-bold mb-1">🎉 ลงทะเบียนสำเร็จ</h3>
+            <p class="mb-0" id="headerEventText">ลงทะเบียนเข้าปฏิบัติงานเรียบร้อยแล้ว</p>
+        </div>
+        <div class="card-body p-4">
+            
+            <div class="alert alert-success text-center mb-4" role="alert">
+                ระบบได้ส่ง Ticket QR Code ไปยังอีเมลของคุณเรียบร้อยแล้ว
+            </div>
+
+            <div class="border rounded p-3 bg-light mb-4">
+                <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">📋 รายละเอียดการลงทะเบียน</h6>
+                <div class="row g-2 text-start fs-6">
+                    <div class="col-12"><b>ชื่องาน Event:</b> <span id="resEventName" class="text-dark">-</span></div>
+                    <div class="col-12"><b>สถานที่จัดงาน:</b> <span id="resLocation" class="text-dark">-</span></div>
+                    <div class="col-6"><b>ชื่อ-นามสกุล:</b> <span id="resFullname" class="text-dark">-</span></div>
+                    <div class="col-6"><b>บริษัท:</b> <span id="resCompany" class="text-dark">-</span></div>
+                    <div class="col-6"><b>เลขที่บูธ:</b> <span id="resBooth" class="text-dark">-</span></div>
+                    <div class="col-6"><b>ประเภทงาน:</b> <span id="resJobType" class="text-dark">-</span></div>
+                    <div class="col-6"><b>จำนวนคน:</b> <span id="resWorkers" class="text-dark">-</span> คน</div>
+                    <div class="col-6"><b>Permit ID:</b> <span id="resPermitId" class="fw-bold text-danger">-</span></div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <a href="register.html" class="btn btn-primary px-5 fw-bold py-2">➕ ลงทะเบียนใหม่อีกครั้ง</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // ดึงข้อมูลที่ส่งต่อมาทาง URL Parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            const eventName = urlParams.get('event') || 'งานปฏิบัติงาน';
+            const location = urlParams.get('location') || '-';
+            const fullname = urlParams.get('fullname') || '-';
+            const company = urlParams.get('company') || '-';
+            const booth = urlParams.get('booth') || '-';
+            const jobType = urlParams.get('job_type') || '-';
+            const workers = urlParams.get('workers') || '1';
+            const permitId = urlParams.get('id') || '-';
+
+            // แสดงผลลงในหน้าจอ
+            document.getElementById("headerEventText").textContent = `ลงทะเบียนเข้างาน "${eventName}" เรียบร้อยแล้ว`;
+            document.getElementById("resEventName").textContent = eventName;
+            document.getElementById("resLocation").textContent = location;
+            document.getElementById("resFullname").textContent = fullname;
+            document.getElementById("resCompany").textContent = company;
+            document.getElementById("resBooth").textContent = booth;
+            document.getElementById("resJobType").textContent = jobType;
+            document.getElementById("resWorkers").textContent = workers;
+            document.getElementById("resPermitId").textContent = `PERMIT-${permitId}`;
+        });
+    </script>
+</body>
+</html>
