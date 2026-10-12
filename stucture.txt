@@ -1,14 +1,15 @@
 event-qr-system/
-├── docker-compose.yml       # กำหนดค่าและจัดการ Multi-container Docker สำหรับรันแอปพลิเคชัน Node.js, MySQL และ phpMyAdmin พร้อมเซ็ต Timezone (Asia/Bangkok)
-├── Dockerfile               # ไฟล์สำหรับสร้าง Docker Image ของฝั่ง Backend (Node.js) ติดตั้ง dependencies และกำหนดค่าเริ่มต้น
-├── init.sql                 # สคริปต์ SQL เริ่มต้นสำหรับสร้างตารางฐานข้อมูล (events, attendees, checkin_logs, users) และบัญชีแอดมินเริ่มต้น
-├── package.json             # ไฟล์จัดการแพ็กเกจและไลบรารีของ Node.js (เช่น express, mysql2, nodemailer, qrcode, exceljs, multer)
-├── server.js                # ไฟล์ Backend หลักของระบบ รัน Server, เชื่อมต่อ MySQL, จัดการ API ทั้งหมด (Login, Event CRUD, Import/Export Excel, Register, Check-in)
-└── public/                  # โฟลเดอร์เก็บไฟล์ Static สำหรับฝั่ง Frontend
-    ├── admin.html           # หน้าจอเว็บสำหรับผู้ดูแลระบบ (System Admin และ Supervisor) ใช้จัดการ Event, นำเข้า Excel และออกรายงาน
-    ├── login.html           # หน้าจอเข้าสู่ระบบ (Login) รองรับการตรวจสอบสิทธิ์ตามบทบาท (ADMIN, SUPERVISOR, SCANNER)
-    ├── register.html        # หน้าจอลงทะเบียนเข้าร่วมงานของผู้ใช้งาน พร้อมสร้าง QR Code และส่งอีเมลอัตโนมัติ
-    ├── scanner.html         # หน้าจอสำหรับสแกน QR Code เช็คอินเข้างาน (รองรับสแกนผ่านกล้องและกรอกรหัสด้วยตนเอง)
+├── .env                     # [จำเป็นสำหรับตั้งค่า] ไฟล์เก็บตัวแปรสภาพแวดล้อม (Environment Variables) เช่น พอร์ต, ข้อมูลเชื่อมต่อ MySQL และรหัสผ่าน SMTP สำหรับส่งอีเมล
+├── docker-compose.yml       # [จำเป็น] ไฟล์จัดการ Multi-container Docker (Node.js, MySQL, phpMyAdmin) และกำหนด Timezone เป็น Asia/Bangkok
+├── Dockerfile               # [จำเป็น] ไฟล์สำหรับ Build Docker Image ของฝั่ง Backend (Node.js)
+├── init.sql                 # [จำเป็น] ไฟล์ SQL เริ่มต้นสร้างตารางฐานข้อมูลอัตโนมัติ (attendees, checkin_logs, events, users)
+├── package.json             # [จำเป็น] ไฟล์กำหนดแพ็กเกจและ dependencies ของ Node.js (express, mysql2, nodemailer, qrcode, exceljs, multer)
+├── server.js                # [จำเป็น] ไฟล์ Backend หลักของระบบ รันเซิร์ฟเวอร์, เชื่อมต่อฐานข้อมูล และจัดการ API ทั้งหมด
+└── public/                  # โฟลเดอร์เก็บไฟล์หน้าเว็บฝั่ง Frontend
+    ├── admin.html           # [จำเป็น] หน้าจอผู้ดูแลระบบ (สำหรับ Admin และ Supervisor จัดการ Event, Import Excel, ออกรายงาน)
+    ├── login.html           # [จำเป็น] หน้าจอเข้าสู่ระบบ (Login) ตรวจสอบสิทธิ์ผู้ใช้งาน
+    ├── register.html        # [จำเป็น] หน้าจอลงทะเบียนผู้เข้าร่วมงาน พร้อมสร้าง QR Code และส่งอีเมลอัตโนมัติ
+    ├── scanner.html         # [จำเป็น] หน้าจอสำหรับสแกน QR Code เช็คอินเข้างาน (บันทึกข้อมูลและชื่อผู้สแกน)
     └── js/                  # โฟลเดอร์เก็บไฟล์สคริปต์ฝั่ง Frontend
-        ├── admin.js         # ควบคุมการทำงาน การแสดงผล และการเรียก API ในหน้า admin.html (จัดการ Event, User และรายงาน)
-        └── login.js         # ควบคุมการส่งข้อมูลตรวจสอบรหัสผ่านและการเปลี่ยนหน้าตามสิทธิ์ในหน้า login.html
+        ├── admin.js         # [จำเป็น] สคริปต์ควบคุมการทำงานของหน้า admin.html
+        └── login.js         # [จำเป็น] สคริปต์ควบคุมการทำงานของหน้า login.html
