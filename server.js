@@ -42,7 +42,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// ตรวจสอบ Database และสร้าง/อัปเดตคอลัมน์อัตโนมัติ
+// ตรวจสอบ Database และสร้าง/อัปเดตตารางและคอลัมน์อัตโนมัติ
 (async () => {
     try {
         const connection = await pool.getConnection();
@@ -338,7 +338,7 @@ app.post('/api/events/import', upload.single('excel_file'), async (req, res) => 
 });
 
 // ==========================================
-// 3. API Export Excel (เพิ่มคอลัมน์ ผู้สแกนเข้างาน)
+// 3. API Export Excel (แสดงผู้ลงทะเบียนทั้งหมด ทั้งที่สแกนและยังไม่สแกน)
 // ==========================================
 
 app.get('/api/export-excel', async (req, res) => {
@@ -347,7 +347,7 @@ app.get('/api/export-excel', async (req, res) => {
     try {
         let sql = `
             SELECT 
-                l.id AS log_id,
+                a.id AS attendee_id,
                 a.fullname,
                 a.company,
                 a.phone,
@@ -361,35 +361,35 @@ app.get('/api/export-excel', async (req, res) => {
                 l.scanned_at,
                 l.status,
                 l.scanned_by
-            FROM checkin_logs l
-            JOIN attendees a ON l.attendee_id = a.id
-            LEFT JOIN events e ON l.event_id = e.id
+            FROM attendees a
+            LEFT JOIN checkin_logs l ON a.id = l.attendee_id
+            LEFT JOIN events e ON a.event_id = e.id
             WHERE 1=1
         `;
         const params = [];
 
         if (event_id) {
-            sql += ` AND l.event_id = ?`;
+            sql += ` AND a.event_id = ?`;
             params.push(event_id);
         }
         if (start_date) {
-            sql += ` AND DATE(l.scanned_at) >= ?`;
+            sql += ` AND (DATE(l.scanned_at) >= ? OR l.scanned_at IS NULL)`;
             params.push(start_date);
         }
         if (end_date) {
-            sql += ` AND DATE(l.scanned_at) <= ?`;
+            sql += ` AND (DATE(l.scanned_at) <= ? OR l.scanned_at IS NULL)`;
             params.push(end_date);
         }
 
-        sql += ` ORDER BY l.scanned_at DESC`;
+        sql += ` ORDER BY a.id DESC, l.scanned_at DESC`;
 
         const [rows] = await pool.query(sql, params);
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('รายงานการสแกนเข้างาน');
+        const worksheet = workbook.addWorksheet('รายงานการลงทะเบียนและการสแกน');
 
         worksheet.columns = [
-            { header: 'ลำดับ', key: 'log_id', width: 10 },
+            { header: 'ลำดับ (Attendee ID)', key: 'attendee_id', width: 15 },
             { header: 'ชื่อ-นามสกุล', key: 'fullname', width: 25 },
             { header: 'บริษัท', key: 'company', width: 25 },
             { header: 'เบอร์โทร', key: 'phone', width: 15 },
@@ -413,17 +413,22 @@ app.get('/api/export-excel', async (req, res) => {
         };
 
         rows.forEach(row => {
+            let scanStatus = '-';
+            if (row.status === 'SUCCESS') scanStatus = 'ผ่าน (ครั้งแรก)';
+            else if (row.status === 'DUPLICATE') scanStatus = 'สแกนซ้ำ';
+            else scanStatus = 'ยังไม่ได้สแกน';
+
             worksheet.addRow({
                 ...row,
                 work_date: row.work_date ? new Date(row.work_date).toLocaleString('sv-SE', { timeZone: 'Asia/Bangkok' }).substring(0, 16) : '-',
                 scanned_at: row.scanned_at ? new Date(row.scanned_at).toLocaleString('sv-SE', { timeZone: 'Asia/Bangkok' }) : '-',
-                status: row.status === 'SUCCESS' ? 'ผ่าน (ครั้งแรก)' : 'สแกนซ้ำ',
+                status: scanStatus,
                 scanned_by: row.scanned_by || '-'
             });
         });
 
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename=checkin_report_${Date.now()}.xlsx`);
+        res.setHeader('Content-Disposition', `attachment; filename=attendee_checkin_report_${Date.now()}.xlsx`);
 
         await workbook.xlsx.write(res);
         res.end();
@@ -504,12 +509,13 @@ app.post('/api/register', async (req, res) => {
         res.json({ success: true, message: "ลงทะเบียนสำเร็จเรียบร้อยแล้ว", attendee_id: attendeeId });
 
     } catch (err) {
-        res.status(500).json({ error: "เกิดข้อผิดพลาดของฐานข้อมูล" });
+        console.error("Register Error:", err);
+        res.status(500).json({ error: "เกิดข้อผิดพลาดของฐานข้อมูล: " + err.message });
     }
 });
 
 // ==========================================
-// 5. API สแกนเช็คอิน (บันทึก scanned_by)
+// 5. API สแกนเช็คอิน
 // ==========================================
 
 app.post('/api/checkin', async (req, res) => {
@@ -545,7 +551,6 @@ app.post('/api/checkin', async (req, res) => {
 
         const status = isDuplicate ? 'DUPLICATE' : 'SUCCESS';
         
-        // บันทึกการเช็คอินลง DB พร้อมเก็บชื่อผู้สแกน (scanned_by)
         await pool.query(
             'INSERT INTO checkin_logs (attendee_id, event_id, status, scanned_by) VALUES (?, ?, ?, ?)',
             [attendee.id, attendee.event_id, status, scanned_by || 'Unknown Scanner']
