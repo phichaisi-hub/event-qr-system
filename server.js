@@ -9,15 +9,12 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ตั้งค่า Multer สำหรับพักไฟล์อัปโหลดไว้ในหน่วยความจำ (Memory Storage)
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Database Connection Pool
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'db',
     user: process.env.DB_USER || 'root',
@@ -42,13 +39,11 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// ตรวจสอบ Database และสร้าง/อัปเดตตารางและคอลัมน์อัตโนมัติ
 (async () => {
     try {
         const connection = await pool.getConnection();
         console.log('✅ Connected to MySQL Database successfully.');
 
-        // สร้างตาราง users
         await connection.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -60,14 +55,12 @@ const transporter = nodemailer.createTransport({
             )
         `);
 
-        // ตรวจสอบและเพิ่มคอลัมน์ scanned_by ใน checkin_logs หากยังไม่มี
         const [cols] = await connection.query("SHOW COLUMNS FROM checkin_logs LIKE 'scanned_by'");
         if (cols.length === 0) {
             await connection.query("ALTER TABLE checkin_logs ADD COLUMN scanned_by VARCHAR(100) NULL AFTER status");
             console.log('✅ Added column "scanned_by" to checkin_logs table.');
         }
 
-        // สร้าง Admin เริ่มต้นถ้ายังไม่มี (admin / admin123)
         const [users] = await connection.query('SELECT * FROM users WHERE username = "admin"');
         if (users.length === 0) {
             await connection.query(`
@@ -83,7 +76,6 @@ const transporter = nodemailer.createTransport({
     }
 })();
 
-// ฟังก์ชันแปลงวันที่ Excel
 function parseExcelDate(cellValue) {
     if (!cellValue) return null;
 
@@ -191,6 +183,45 @@ app.post('/api/users', async (req, res) => {
     }
 });
 
+app.put('/api/users/:id', async (req, res) => {
+    const userId = req.params.id;
+    const { password, fullname, role } = req.body;
+
+    try {
+        if (password && password.trim() !== '') {
+            await pool.query('UPDATE users SET password = ?, fullname = ?, role = ? WHERE id = ?', [password, fullname, role, userId]);
+        } else {
+            await pool.query('UPDATE users SET fullname = ?, role = ? WHERE id = ?', [fullname, role, userId]);
+        }
+        res.json({ success: true, message: "อัปเดตข้อมูลผู้ใช้งานสำเร็จ" });
+    } catch (err) {
+        res.status(500).json({ error: "Database error: " + err.message });
+    }
+});
+
+app.put('/api/users/:id/password', async (req, res) => {
+    const userId = req.params.id;
+    const { old_password, new_password } = req.body;
+
+    if (!new_password) {
+        return res.status(400).json({ error: "กรุณากรอกรหัสผ่านใหม่" });
+    }
+
+    try {
+        const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
+        if (users.length === 0) return res.status(404).json({ error: "ไม่พบผู้ใช้งาน" });
+
+        if (old_password && users[0].password !== old_password) {
+            return res.status(400).json({ error: "รหัสผ่านเดิมไม่ถูกต้อง" });
+        }
+
+        await pool.query('UPDATE users SET password = ? WHERE id = ?', [new_password, userId]);
+        res.json({ success: true, message: "เปลี่ยนรหัสผ่านสำเร็จ" });
+    } catch (err) {
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
 app.delete('/api/users/:id', async (req, res) => {
     try {
         await pool.query('DELETE FROM users WHERE id = ?', [req.params.id]);
@@ -201,7 +232,7 @@ app.delete('/api/users/:id', async (req, res) => {
 });
 
 // ==========================================
-// 2. API จัดการ EVENT
+// 2. API จัดการ EVENT (CRUD + Import/Export Excel)
 // ==========================================
 
 app.get('/api/events', async (req, res) => {
@@ -337,8 +368,48 @@ app.post('/api/events/import', upload.single('excel_file'), async (req, res) => 
     }
 });
 
+// API Export รายชื่อ Event เป็น Excel (Template เดียวกันกับที่ใช้นำเข้า)
+app.get('/api/events/export-excel', async (req, res) => {
+    try {
+        const [events] = await pool.query('SELECT event_name, location, event_date FROM events ORDER BY id DESC');
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Events Template');
+
+        worksheet.columns = [
+            { header: 'event_name', key: 'event_name', width: 35 },
+            { header: 'location', key: 'location', width: 25 },
+            { header: 'event_date', key: 'event_date', width: 15 }
+        ];
+
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'D9E1F2' }
+        };
+
+        events.forEach(ev => {
+            worksheet.addRow({
+                event_name: ev.event_name,
+                location: ev.location || '',
+                event_date: ev.event_date ? new Date(ev.event_date).toISOString().split('T')[0] : ''
+            });
+        });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=events_export_${Date.now()}.xlsx`);
+
+        await workbook.xlsx.write(res);
+        res.end();
+
+    } catch (err) {
+        res.status(500).json({ error: "เกิดข้อผิดพลาดในการสร้างไฟล์ Excel: " + err.message });
+    }
+});
+
 // ==========================================
-// 3. API Export Excel (แสดงผู้ลงทะเบียนทั้งหมด ทั้งที่สแกนและยังไม่สแกน)
+// 3. API Export Excel (รายงานการเข้างาน)
 // ==========================================
 
 app.get('/api/export-excel', async (req, res) => {
