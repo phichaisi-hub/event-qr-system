@@ -1,15 +1,15 @@
 event-qr-system/
-├── .env                     # [จำเป็นสำหรับตั้งค่า] ไฟล์เก็บตัวแปรสภาพแวดล้อม (Environment Variables) เช่น พอร์ต, ข้อมูลเชื่อมต่อ MySQL และรหัสผ่าน SMTP สำหรับส่งอีเมล
-├── docker-compose.yml       # [จำเป็น] ไฟล์จัดการ Multi-container Docker (Node.js, MySQL, phpMyAdmin) และกำหนด Timezone เป็น Asia/Bangkok
-├── Dockerfile               # [จำเป็น] ไฟล์สำหรับ Build Docker Image ของฝั่ง Backend (Node.js)
-├── init.sql                 # [จำเป็น] ไฟล์ SQL เริ่มต้นสร้างตารางฐานข้อมูลอัตโนมัติ (attendees, checkin_logs, events, users)
-├── package.json             # [จำเป็น] ไฟล์กำหนดแพ็กเกจและ dependencies ของ Node.js (express, mysql2, nodemailer, qrcode, exceljs, multer)
-├── server.js                # [จำเป็น] ไฟล์ Backend หลักของระบบ รันเซิร์ฟเวอร์, เชื่อมต่อฐานข้อมูล และจัดการ API ทั้งหมด
+├── docker-compose.yml       # [จำเป็น] ตั้งค่า Multi-container Docker และ Timezone (Asia/Bangkok)
+├── Dockerfile               # [จำเป็น] สร้าง Docker Image สำหรับ Backend (Node.js)
+├── init.sql                 # [จำเป็น] สคริปต์ SQL สร้างฐานข้อมูลเริ่มต้นอัตโนมัติ
+├── package.json             # [จำเป็น] จัดการไลบรารีและแพ็กเกจ Node.js
+├── server.js                # [จำเป็น] Backend หลักจัดการ API ทั้งหมด
 └── public/                  # โฟลเดอร์เก็บไฟล์หน้าเว็บฝั่ง Frontend
-    ├── admin.html           # [จำเป็น] หน้าจอผู้ดูแลระบบ (สำหรับ Admin และ Supervisor จัดการ Event, Import Excel, ออกรายงาน)
-    ├── login.html           # [จำเป็น] หน้าจอเข้าสู่ระบบ (Login) ตรวจสอบสิทธิ์ผู้ใช้งาน
-    ├── register.html        # [จำเป็น] หน้าจอลงทะเบียนผู้เข้าร่วมงาน พร้อมสร้าง QR Code และส่งอีเมลอัตโนมัติ
-    ├── scanner.html         # [จำเป็น] หน้าจอสำหรับสแกน QR Code เช็คอินเข้างาน (บันทึกข้อมูลและชื่อผู้สแกน)
-    └── js/                  # โฟลเดอร์เก็บไฟล์สคริปต์ฝั่ง Frontend
-        ├── admin.js         # [จำเป็น] สคริปต์ควบคุมการทำงานของหน้า admin.html
-        └── login.js         # [จำเป็น] สคริปต์ควบคุมการทำงานของหน้า login.html
+    ├── admin.html           # [จำเป็น] หน้าจอผู้ดูแลระบบ (จัดการ Event, Import Excel, ออกรายงาน)
+    ├── login.html           # [จำเป็น] หน้าจอเข้าสู่ระบบตรวจสอบสิทธิ์
+    ├── register.html        # [จำเป็น] หน้าจอลงทะเบียนผู้เข้าร่วมงาน / ส่ง QR Code ทางอีเมล
+    ├── success.html         # [ใหม่/จำเป็น] หน้าจอแสดงผลหลังลงทะเบียนสำเร็จ พร้อมรายละเอียดและปุ่มกลับไปลงทะเบียนซ้ำ
+    ├── scanner.html         # [จำเป็น] หน้าจอสำหรับสแกน QR Code เช็คอินเข้างาน
+    └── js/                  # โฟลเดอร์สคริปต์ฝั่ง Frontend
+        ├── admin.js         # [จำเป็น] ควบคุมหน้า admin.html
+        └── login.js         # [จำเป็น] ควบคุมหน้า login.html
